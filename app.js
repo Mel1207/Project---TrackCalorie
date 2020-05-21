@@ -56,6 +56,21 @@ const itemCtrl = (function() {
             });
             return found; 
         },
+        deleteItem: function(id) {
+            // get the id
+            ids = data.items.map(function(item) {
+                return item.id;
+            });
+
+            // get index
+            const index = ids.indexOf(id);
+
+            // remove item
+            data.items.splice(index, 1);
+        },
+        clearAllItems: function () {
+            data.items = [];
+        },
         setCurrentItem: (item) => {
             data.currentItem = item;
         },
@@ -90,9 +105,10 @@ const uiCtrl = (function() {
         updateBtn: '.update-btn',
         deleteBtn: '.delete-btn',
         backBtn: '.back-btn',
+        clearBtn: '.clear-btn',
         itemNameInput: '#item-name',
         itemCaloriesInput: '#item-calories',
-        totalCalories: '.total-calories'
+        totalCalories: '.total-calories'   
     }
     
     // Public Methods
@@ -138,6 +154,11 @@ const uiCtrl = (function() {
             // Insert item
             document.querySelector(UISelectors.itemList).insertAdjacentElement('beforeend', li);
         },
+        deleteListItem: function (id) {
+            const itemID = `#item-${id}`;
+            const item = document.querySelector(itemID);
+            item.remove();
+        },
         clearInput: function () {
             document.querySelector(UISelectors.itemNameInput).value = '';
             document.querySelector(UISelectors.itemCaloriesInput).value = '';
@@ -146,6 +167,16 @@ const uiCtrl = (function() {
             document.querySelector(UISelectors.itemNameInput).value = itemCtrl.getCurrentItem().name;
             document.querySelector(UISelectors.itemCaloriesInput).value = itemCtrl.getCurrentItem().calories;
             uiCtrl.showEditState();
+        },
+        removeItems: function() {
+            let listItems = document.querySelectorAll(UISelectors.itemList);
+
+            // turn node list into array
+            listItems = Array.from(listItems);
+
+            listItems.forEach(function(item) {
+                item.remove();
+            });
         },
         hideList: function () {
             document.querySelector(UISelectors.itemList).style.display = 'none';
@@ -187,6 +218,15 @@ const appCtrl = (function(itemCtrl, uiCtrl) {
 
         // Edit icon click event
         document.querySelector(UISelectors.itemList).addEventListener('click', itemUpdateSubmit);
+
+        // Delete button event
+        document.querySelector(UISelectors.deleteBtn).addEventListener('click', itemDeleteSubmit);
+
+        // Back button event
+        document.querySelector(UISelectors.backBtn).addEventListener('click', uiCtrl.clearEditState);
+
+        // Clear button event
+        document.querySelector(UISelectors.clearBtn).addEventListener('click', clearAllItemsClick);
     }
 
     // Add item submit
@@ -239,6 +279,41 @@ const appCtrl = (function(itemCtrl, uiCtrl) {
             // console.log('no edit target');
         }
         e.preventDefault()
+    }
+
+    // Delete button event
+    const itemDeleteSubmit = function (e) {
+        // Get current item
+        const currentItem = itemCtrl.getCurrentItem();
+
+        // Delete from data structure
+        itemCtrl.deleteItem(currentItem.id);
+        
+        // delete from ui
+        uiCtrl.deleteListItem(currentItem.id);
+        e.preventDefault();
+
+        // Get the total calories
+        const totalCalories = itemCtrl.getTotalCalories(); 
+        // add total calories to ui
+        uiCtrl.showTotalCalories(totalCalories);
+    }
+
+    // Clear items event
+    const clearAllItemsClick = function () {
+        // Delete all items from data structure
+        itemCtrl.clearAllItems();
+
+        // Get the total calories
+        const totalCalories = itemCtrl.getTotalCalories(); 
+        // add total calories to ui
+        uiCtrl.showTotalCalories(totalCalories);
+
+        // hide the ul
+        uiCtrl.hideList();
+
+        // remove from ui
+        uiCtrl.removeItems();
     }
     
 
